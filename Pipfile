@@ -9,6 +9,7 @@ numpy = "*"
 matplotlib = "*"
 sklearn = "*"
 jupyterlab = "*"
+tqdm = "*"
 
 [dev-packages]
 

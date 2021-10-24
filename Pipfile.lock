@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "d829d8daa9f5b7236661646ba036d6e0ec8e6e1c3debfe42a8b849633bc1884a"
+            "sha256": "bfa83931b01f5974fd3ba6608a236d6d43d4dfb9a21f7bf304d47308a4e7529d"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -147,7 +147,7 @@
                 "sha256:5941b2b48a20143d2267e95b1c2a7603ce057ee39fd88e7329b0c292aa16869b",
                 "sha256:9f47eda37229f68eee03b24b9748937c7dc3868f906e8ba69fbcbdd3bc5dc3e2"
             ],
-            "markers": "sys_platform == 'win32'",
+            "markers": "platform_system == 'Windows' and sys_platform == 'win32'",
             "version": "==0.4.4"
         },
         "cycler": {
@@ -1017,6 +1017,14 @@
             ],
             "markers": "python_version >= '3.5'",
             "version": "==6.1"
+        },
+        "tqdm": {
+            "hashes": [
+                "sha256:8dd278a422499cd6b727e6ae4061c40b48fce8b76d1ccbf5d34fca9b7f925b0c",
+                "sha256:d359de7217506c9851b7869f3708d8ee53ed70a1b8edbba4dbcb47442592920d"
+            ],
+            "index": "pypi",
+            "version": "==4.62.3"
         },
         "traitlets": {
             "hashes": [
