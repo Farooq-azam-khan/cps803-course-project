@@ -10,6 +10,7 @@ matplotlib = "*"
 sklearn = "*"
 jupyterlab = "*"
 tqdm = "*"
+tensorflow-gpu = "*"
 
 [dev-packages]
 
