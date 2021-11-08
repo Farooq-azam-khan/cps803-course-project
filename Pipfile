@@ -11,6 +11,7 @@ sklearn = "*"
 jupyterlab = "*"
 tqdm = "*"
 tensorflow-gpu = "*"
+pydot = "*"
 
 [dev-packages]
 
