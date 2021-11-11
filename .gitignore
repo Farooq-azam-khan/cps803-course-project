@@ -1,2 +1,4 @@
 data
 .idea
+*.h5
+*/logs
