@@ -103,7 +103,7 @@ def main():
     
     print('Plotting Model')
     curr_time = int(time.time())
-    unique_plot_name = f'./plots/{model_type}/simple_{curr_time}.png'
+    unique_plot_name = f'./plots/{model_type}/{curr_time}_simple.png'
     # docs: https://www.tensorflow.org/api_docs/python/tf/keras/utils/plot_model
     plot_model(model, to_file=unique_plot_name, show_shapes=True)
 
