@@ -1,0 +1,4 @@
+image_size=(100, 100)
+batch_size = 16
+epochs = 100
+learning_rate = 1e-3
