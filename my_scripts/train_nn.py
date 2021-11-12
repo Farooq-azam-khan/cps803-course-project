@@ -7,11 +7,11 @@ from keras.utils.vis_utils import plot_model
 
 import matplotlib.pyplot as plt
 
-image_size = (100, 100) #(384, 512)
+image_size = (150, 150) #(384, 512)
 batch_size = 16
-epochs = 5
+epochs = 100
 learning_rate = 1e-3
-
+model_type = 'nn'
 base_dir = pathlib.Path('..')
 data_train = base_dir / 'data' / 'train'
 target_classes = ['cardboard', 'glass', 'metal', 'paper', 'plastic', 'trash']
@@ -25,6 +25,9 @@ def make_nn_model(input_shape, num_classes):
     model.add(layers.Rescaling(1./255))
     # 1 dense layer of 512 size
     model.add(layers.Flatten())
+    model.add(layers.Dense(512, activation="relu"))
+    model.add(layers.Dense(512, activation="relu"))
+    model.add(layers.Dense(512, activation="relu"))
     model.add(layers.Dense(512, activation="relu"))
     model.add(layers.Dense(num_classes, activation="softmax"))
     return model 
@@ -67,26 +70,27 @@ def load_train_val_data():
     )
     return train_ds, val_ds
 
+
 def plot_loss(history, time_stamp):
     plt.figure()
-    plt.title('Simple NN Loss')
+    plt.title(f'Simple NN Loss - batch size {batch_size}')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.plot(range(1, epochs+1), history.history['val_loss'])
     plt.plot(range(1, epochs+1), history.history['loss'])
     plt.legend(['Validation Loss', 'Training Loss'])
     
-    plt.savefig(f'./plots/nn_loss_{time_stamp}.jpeg')
+    plt.savefig(f'./plots/{model_type}/{time_stamp}_loss_size_{image_size[0]}_{image_size[1]}.jpeg')
 
 def plot_accuracy(history, time_stamp):
     plt.figure()
-    plt.title('Simple NN Accuracy')
+    plt.title(f'Simple NN Accuracy - batch size {batch_size}')
     plt.xlabel('Epoch')
     plt.ylabel('Accuracy')
     plt.plot(range(1, epochs+1), history.history['val_accuracy'])
     plt.plot(range(1, epochs+1), history.history['accuracy'])
     plt.legend(['Validation Accuracy', 'Training Accuracy'])
-    plt.savefig(f'./plots/nn_accuracy_{time_stamp}.jpeg')
+    plt.savefig(f'./plots/{model_type}/{time_stamp}_acc_size_{image_size[0]}_{image_size[1]}.jpeg')
     
 def main():
     configure_gpu_memory_growth()
@@ -99,7 +103,7 @@ def main():
     
     print('Plotting Model')
     curr_time = int(time.time())
-    unique_plot_name = f'./plots/simple_nn_{curr_time}.png'
+    unique_plot_name = f'./plots/{model_type}/simple_{curr_time}.png'
     # docs: https://www.tensorflow.org/api_docs/python/tf/keras/utils/plot_model
     plot_model(model, to_file=unique_plot_name, show_shapes=True)
 
@@ -107,7 +111,7 @@ def main():
     
     callbacks = [
         keras.callbacks.ModelCheckpoint(
-            filepath='./models/simple_nn_{epoch}_{val_accuracy:.2f}.h5',
+            filepath='./models/nn/simple_{epoch}_{val_accuracy:.2f}.h5',
             monitor='val_accuracy',
             save_best_only=True,
             mode='max'# max becuase we want to save based on val_accuracy (if loss then min)
