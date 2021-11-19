@@ -1,24 +1,23 @@
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras import layers
+from tensorflow.keras import layers, regularizers
 import pathlib
 import time 
 from keras.utils.vis_utils import plot_model
 
 import matplotlib.pyplot as plt
 
-import helpers 
-
-print("HI THERE")
-
-image_size = (100, 100) #(384, 512)
-batch_size = 8
-epochs = 5
+# Hyper parameters
+image_size = (224, 224) #(384, 512)
+batch_size = 32
+epochs = 10
 learning_rate = 1e-3
 model_type = 'cnn'
 base_dir = pathlib.Path('..')
 data_train = base_dir / 'data' / 'train'
 target_classes = ['cardboard', 'glass', 'metal', 'paper', 'plastic', 'trash']
+NUM_OF_DENSE_LAYS = 20
+
 
 
 def make_cnn_model(input_shape, num_classes):
@@ -26,14 +25,16 @@ def make_cnn_model(input_shape, num_classes):
     model = keras.Sequential()
     model.add(inputs)
     model.add(layers.Rescaling(1./255))
-    # 1 Conv2d layer  and one dense layer of 512 size
+
     model.add(layers.Conv2D(32, 3, padding='same', activation='relu', input_shape=input_shape))
-    # model.add(layers.Conv2D(64, 3, padding="same", activation="relu"))
-    # model.add(layers.Conv2D(64, 3, padding="same", activation="relu"))
+    # 1 dense layer of 512 size
     model.add(layers.Flatten())
-    model.add(layers.Dense(512, activation="relu"))
+    # 20 Layers 
+    for _ in range(NUM_OF_DENSE_LAYS):
+        model.add(layers.Dense(units=512, activation="relu"))
+
     model.add(layers.Dense(num_classes, activation="softmax"))
-    return model 
+    return model
 
 def configure_gpu_memory_growth():
     gpus = tf.config.list_physical_devices('GPU')
@@ -55,8 +56,8 @@ def load_train_val_data():
     train_ds = tf.keras.preprocessing.image_dataset_from_directory(
         '../data/train',
         validation_split=0.2,
-        subset='training',
-        label_mode='categorical',
+        subset="training",
+        label_mode="categorical",
         seed=1337,
         image_size=image_size,
         batch_size=batch_size,
@@ -65,38 +66,38 @@ def load_train_val_data():
     val_ds = tf.keras.preprocessing.image_dataset_from_directory(
         data_train,
         validation_split=0.2,
-        subset='validation',
-        label_mode='categorical',
+        subset="validation",
+        label_mode="categorical",
         seed=1337,
         image_size=image_size,
         batch_size=batch_size,
     )
     return train_ds, val_ds
 
+
 def plot_loss(history, time_stamp):
     plt.figure()
-    plt.title('Simple NN Loss')
+    plt.title(f'Simple NN Loss - batch size {batch_size}')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.plot(range(1, epochs+1), history.history['val_loss'])
     plt.plot(range(1, epochs+1), history.history['loss'])
     plt.legend(['Validation Loss', 'Training Loss'])
-    file_name = helpers.get_plot_file_name(model_type, 'loss', time_stamp, image_size)
-    plt.savefig(file_name)
+    
+    plt.savefig(f'./plots/{model_type}/{time_stamp}_loss_size_{image_size[0]}_{image_size[1]}.jpeg')
 
 def plot_accuracy(history, time_stamp):
     plt.figure()
-    plt.title('Simple NN Accuracy')
+    plt.title(f'Simple NN Accuracy - batch size {batch_size}')
     plt.xlabel('Epoch')
     plt.ylabel('Accuracy')
     plt.plot(range(1, epochs+1), history.history['val_accuracy'])
     plt.plot(range(1, epochs+1), history.history['accuracy'])
     plt.legend(['Validation Accuracy', 'Training Accuracy'])
-    file_name = helpers.get_plot_file_name(model_type, 'acc', time_stamp, image_size)
-    plt.savefig(file_name)
+    plt.savefig(f'./plots/{model_type}/{time_stamp}_acc_size_{image_size[0]}_{image_size[1]}.jpeg')
     
 def main():
-    # configure_gpu_memory_growth()
+    configure_gpu_memory_growth()
     train_ds, val_ds = load_train_val_data()
 
     print('Making Model')
@@ -106,14 +107,12 @@ def main():
     
     print('Plotting Model')
     curr_time = int(time.time())
-    unique_plot_name = f'./plots/{curr_time}_simple_{model_type}.png'
+    unique_plot_name = f'./plots/{model_type}/{curr_time}_simple.png'
     # docs: https://www.tensorflow.org/api_docs/python/tf/keras/utils/plot_model
-    # plot_model(model, to_file=unique_plot_name, show_shapes=True)
+    plot_model(model, to_file=unique_plot_name, show_shapes=True)
 
     print('Training Model')
-    
     time_start = time.time()
-
     callbacks = [
         keras.callbacks.ModelCheckpoint(
             filepath='./models/cnn/simple_{epoch}_{val_accuracy:.2f}.h5',
@@ -132,7 +131,6 @@ def main():
     history = model.fit(
         train_ds, epochs=epochs, callbacks=callbacks, validation_data=val_ds,
     )
-
     time_end = time.time()
 
     print('Time Elapsed: ', time_end - time_start)
@@ -145,3 +143,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
