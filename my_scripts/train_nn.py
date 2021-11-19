@@ -1,20 +1,22 @@
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras import layers
+from tensorflow.keras import layers, regularizers
 import pathlib
 import time 
 from keras.utils.vis_utils import plot_model
 
 import matplotlib.pyplot as plt
 
-image_size = (150, 150) #(384, 512)
-batch_size = 16
-epochs = 100
+# Hyper parameters
+image_size = (224, 224) #(384, 512)
+batch_size = 32
+epochs = 1000
 learning_rate = 1e-3
 model_type = 'nn'
 base_dir = pathlib.Path('..')
 data_train = base_dir / 'data' / 'train'
 target_classes = ['cardboard', 'glass', 'metal', 'paper', 'plastic', 'trash']
+NUM_OF_DENSE_LAYS = 20
 
 
 
@@ -25,12 +27,17 @@ def make_nn_model(input_shape, num_classes):
     model.add(layers.Rescaling(1./255))
     # 1 dense layer of 512 size
     model.add(layers.Flatten())
-    model.add(layers.Dense(512, activation="relu"))
-    model.add(layers.Dense(512, activation="relu"))
-    model.add(layers.Dense(512, activation="relu"))
-    model.add(layers.Dense(512, activation="relu"))
+    # 20 Layers 
+    for _ in range(NUM_OF_DENSE_LAYS):
+        model.add(layers.Dense(
+            units=512, 
+            activation="relu", 
+            kernel_regularizer=regularizers.l1_l2(l1=1e-5, l2=1e-4), 
+            bias_regularizer=regularizers.l2(1e-4), 
+            activity_regularizer=regularizers.l2(1e-5)))
+
     model.add(layers.Dense(num_classes, activation="softmax"))
-    return model 
+    return model
 
 def configure_gpu_memory_growth():
     gpus = tf.config.list_physical_devices('GPU')
@@ -108,7 +115,7 @@ def main():
     plot_model(model, to_file=unique_plot_name, show_shapes=True)
 
     print('Training Model')
-    
+    time_start = time.time()
     callbacks = [
         keras.callbacks.ModelCheckpoint(
             filepath='./models/nn/simple_{epoch}_{val_accuracy:.2f}.h5',
@@ -127,6 +134,9 @@ def main():
     history = model.fit(
         train_ds, epochs=epochs, callbacks=callbacks, validation_data=val_ds,
     )
+    time_end = time.time()
+
+    print('Time Elapsed: ', time_end - time_start)
 
     print('Creating Plots')
     plot_loss(history, curr_time)

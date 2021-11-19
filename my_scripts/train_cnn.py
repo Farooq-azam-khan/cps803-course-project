@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 
 import helpers 
 
+print("HI THERE")
+
 image_size = (100, 100) #(384, 512)
 batch_size = 8
 epochs = 5
@@ -94,7 +96,7 @@ def plot_accuracy(history, time_stamp):
     plt.savefig(file_name)
     
 def main():
-    configure_gpu_memory_growth()
+    # configure_gpu_memory_growth()
     train_ds, val_ds = load_train_val_data()
 
     print('Making Model')
@@ -106,10 +108,12 @@ def main():
     curr_time = int(time.time())
     unique_plot_name = f'./plots/{curr_time}_simple_{model_type}.png'
     # docs: https://www.tensorflow.org/api_docs/python/tf/keras/utils/plot_model
-    plot_model(model, to_file=unique_plot_name, show_shapes=True)
+    # plot_model(model, to_file=unique_plot_name, show_shapes=True)
 
     print('Training Model')
     
+    time_start = time.time()
+
     callbacks = [
         keras.callbacks.ModelCheckpoint(
             filepath='./models/cnn/simple_{epoch}_{val_accuracy:.2f}.h5',
@@ -128,6 +132,10 @@ def main():
     history = model.fit(
         train_ds, epochs=epochs, callbacks=callbacks, validation_data=val_ds,
     )
+
+    time_end = time.time()
+
+    print('Time Elapsed: ', time_end - time_start)
 
     print('Creating Plots')
     plot_loss(history, curr_time)
