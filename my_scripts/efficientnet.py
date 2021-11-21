@@ -15,7 +15,7 @@ IMG_PIXELS = 224
 image_size = (IMG_PIXELS, IMG_PIXELS)
 batch_size = 16
 model_type = 'EfficientNet'
-epochs = 15
+epochs = 1_000
 
 img_augmentation = tf.keras.models.Sequential(
     [
