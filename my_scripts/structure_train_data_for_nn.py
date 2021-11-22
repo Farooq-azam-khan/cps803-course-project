@@ -5,6 +5,7 @@ import tensorflow as tf
 
 base_dir = pathlib.Path('..')
 data_train = base_dir / 'data' / 'train'
+data_test = base_dir / 'data' / 'test'
 
 target_classes = ['cardboard', 'glass', 'metal', 'paper', 'plastic', 'trash']
 def make_target_train_classes():
@@ -15,6 +16,15 @@ def make_target_train_classes():
         else: 
             os.makedirs(data_train / target_cls)
             print(f'path {data_train/target_cls} created')
+
+def make_target_test_classes():
+    for target_cls in target_classes:
+        if os.path.exists(data_test / target_cls):
+            print(f'path {data_test/target_cls} exists')
+            print(target_cls, len(os.listdir(data_test / target_cls)))
+        else: 
+            os.makedirs(data_test / target_cls)
+            print(f'path {data_test/target_cls} created')
 
 def calculate_valid_images():
     num_skipped = 0 
@@ -39,14 +49,25 @@ def move_images():
                 if img_file.startswith(target_cls):
                     img_path.rename(data_train / target_cls / img_file)
                     
+def move_test_images(): 
+    # copy files to train folder classes folder 
+    for img_file in tqdm(os.listdir(data_test)):
+        if img_file.endswith('.jpg'):
+            img_path = data_test / img_file
+            for target_cls in target_classes:
+                if img_file.startswith(target_cls):
+                    img_path.rename(data_test / target_cls / img_file)
+
 def structure_image_pipeline():
     print(len(os.listdir(data_train)), os.listdir(data_train)[0])
-    print('Making Target classes folders')
+    print('Making Target classes for train and test folders')
     make_target_train_classes()
+    make_target_test_classes()
     print('Calculating valid images')
     calculate_valid_images()
     print('Moving images')
     move_images()
+    move_test_images()
 
     
 

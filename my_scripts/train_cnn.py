@@ -8,15 +8,15 @@ from keras.utils.vis_utils import plot_model
 import matplotlib.pyplot as plt
 
 # Hyper parameters
-image_size = (224, 224) #(384, 512)
-batch_size = 32
+image_size = (200,200) #(384, 512)
+batch_size = 16
 epochs = 10
 learning_rate = 1e-3
 model_type = 'cnn'
 base_dir = pathlib.Path('..')
 data_train = base_dir / 'data' / 'train'
 target_classes = ['cardboard', 'glass', 'metal', 'paper', 'plastic', 'trash']
-NUM_OF_DENSE_LAYS = 20
+NUM_OF_DENSE_LAYS = 2
 
 
 
