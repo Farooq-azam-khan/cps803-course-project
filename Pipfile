@@ -12,6 +12,7 @@ jupyterlab = "*"
 tqdm = "*"
 tensorflow-gpu = "*"
 pydot = "*"
+seaborn = "*"
 
 [dev-packages]
 
