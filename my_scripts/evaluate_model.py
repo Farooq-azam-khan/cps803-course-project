@@ -2,6 +2,7 @@ from tensorflow import keras
 import tensorflow as tf
 import numpy as np 
 
+# TODO: refactor for multiple models 
 model_dir = '../my_scripts/models/EfficientNet/simple_909_0.90.h5'
 model = keras.models.load_model(model_dir)
 
