@@ -25,6 +25,8 @@ def load_test_data():
     return test_ds
 test_ds = load_test_data()
 predictions = model.predict(test_ds)
+test_loss, test_acc = model.evaluate(test_ds)
+
 one_hot_labels = np.concatenate([y for x,y in test_ds])
 
 from sklearn import metrics 
@@ -35,6 +37,6 @@ from matplotlib import pyplot as plt
 import time 
 f = plt.figure(figsize=(10,7))
 ax = f.add_subplot(111)
-plt.title('Efficient Net B0 Model Confusion Matrix')
+plt.title(f'Efficient Net B0 Model Confusion Matrix - {test_loss} - {test_acc}')
 metrics.ConfusionMatrixDisplay.from_predictions(y_true=one_hot_labels.argmax(axis=1), y_pred=predictions.argmax(axis=1), display_labels=target_classes,cmap='magma', ax=ax, colorbar=False)
 plt.savefig(f'../my_scripts/plots/EfficientNet/confusion_matrix_{int(time.time())}.jpg')

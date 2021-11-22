@@ -15,7 +15,8 @@ IMG_PIXELS = 224
 image_size = (IMG_PIXELS, IMG_PIXELS)
 batch_size = 16
 model_type = 'EfficientNet'
-epochs = 1_000
+epochs = 100
+learning_rate = 1e-2
 
 img_augmentation = tf.keras.models.Sequential(
     [
@@ -26,6 +27,21 @@ img_augmentation = tf.keras.models.Sequential(
     ],
     name='img_augmentation',
 )
+
+
+def configure_gpu_memory_growth():
+    gpus = tf.config.list_physical_devices('GPU')
+    if gpus:
+        print('Found GPU on Device, configuring memory growth')
+        try:
+            # Currently, memory growth needs to be the same across GPUs
+            for gpu in gpus:
+                tf.config.experimental.set_memory_growth(gpu, True)
+            logical_gpus = tf.config.list_logical_devices('GPU')
+            print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+        except RuntimeError as e:
+            # Memory growth must be set before GPUs have been initialized
+            print(e)
 
 def build_efficient_net_model(num_classes):
     inputs = layers.Input(shape=(IMG_PIXELS,IMG_PIXELS, 3))
@@ -41,17 +57,22 @@ def build_efficient_net_model(num_classes):
 
     top_dropout_rate = 0.2
     x = layers.Dropout(top_dropout_rate, name='top_dropout')(x)
+    # taper of the layer nodes
+    x = layers.Dense(800, name='dense_800', activation='relu')(x)
+    x = layers.Dense(600, name='dense_600', activation='relu')(x)
+    x = layers.Dense(100, name='dense_100', activation='relu')(x)
     outputs = layers.Dense(num_classes, activation='softmax', name='pred')(x)
 
     # Compile
     model = tf.keras.Model(inputs, outputs, name='EfficientNet')
-    optimizer = tf.keras.optimizers.Adam(learning_rate=1e-2)
+    optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
     model.compile(
         optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy']
     )
     return model
 
 def main():
+    configure_gpu_memory_growth()
     print('Loading Data...')
     train_ds, val_ds = load_train_val_data(image_size=image_size, batch_size=batch_size)
 
@@ -60,7 +81,7 @@ def main():
 
     callbacks = [
         keras.callbacks.ModelCheckpoint(
-            filepath='./models/EfficientNet/simple_{epoch}_{val_accuracy:.2f}.h5',
+            filepath='./models/EfficientNet/en_dense_{epoch}_{val_accuracy:.2f}.h5',
             monitor='val_accuracy',
             save_best_only=True,
             mode='max'# max becuase we want to save based on val_accuracy (if loss then min)
