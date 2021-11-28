@@ -21,9 +21,15 @@ if not os.path.isfile(args.model_dir):
 
 print(f'Loading Model from {args.model_dir}')
 
-model_type = 'resnet'
+model_type = args.model_type
+if not os.path.exists(f'../my_scripts/plots/{model_type}'):
+    # os.mkdir(f'../my_scripts/plots/{model_type}')
+    raise ValueError(f'{model_type} dir does not exist. Have you trained it?')
+    
 model_dir = args.model_dir# #'../my_scripts/models/EfficientNet/en_dense_74_0.90.h5'
 model = keras.models.load_model(model_dir)
+
+
 
 # load test Data 
 IMG_PIXELS = 224
@@ -60,7 +66,7 @@ def main():
     import time 
     f = plt.figure(figsize=(10,7))
     ax = f.add_subplot(111)
-    plt.title(f'Efficient Net B0 Model Confusion Matrix - {test_loss} - {test_acc}')
+    plt.title(f'{model_type} Model Confusion Matrix - Loss: {test_loss:.2f} - Test Acc: {test_acc:.2f}')
     metrics.ConfusionMatrixDisplay.from_predictions(y_true=one_hot_labels.argmax(axis=1), y_pred=predictions.argmax(axis=1), display_labels=target_classes,cmap='magma', ax=ax, colorbar=False)
     plt.savefig(f'../my_scripts/plots/{model_type}/{int(time.time())}_confusion_matrix.jpg')
 
