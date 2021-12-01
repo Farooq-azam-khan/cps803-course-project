@@ -6,6 +6,8 @@ import numpy as np
 from matplotlib import style
 import tikzplotlib
 
+from sklearn import metrics 
+
 style.use('ggplot')
 
 def get_plot_file_name(model_type, plot_type, time_stamp, image_size):
@@ -73,44 +75,15 @@ def plot_accuracy(history, time_stamp, batch_size, image_size, model_type, epoch
     plt.close()
 
 
-def plot_confusion_matrix(cm, test_loss, test_acc, classes, time_stamp, model_type, normalize=False, save_as_tex=True):
+def plot_confusion_matrix(one_hot_labels, predictions, test_loss, test_acc, target_classes, time_stamp, model_type, save_as_tex=True):
     plt.title(f'{model_type} Model Confusion Matrix - Loss: {test_loss:.2f} - Test Acc: {test_acc:.2f}')
 
-    accuracy = np.trace(cm) / float(np.sum(cm))
-    misclass = 1 - accuracy
-    cmap = plt.get_cmap('Blues')
+    f = plt.figure(figsize=(10,7))
+    ax = f.add_subplot(111)
+    plt.title(f'{model_type} Model Confusion Matrix - Loss: {test_loss:.2f} - Test Acc: {test_acc:.2f}')
+    metrics.ConfusionMatrixDisplay.from_predictions(y_true=one_hot_labels.argmax(axis=1), y_pred=predictions.argmax(axis=1), display_labels=target_classes,cmap='magma', ax=ax, colorbar=False)
+    plt.savefig(f'./plots/{model_type}/{time_stamp}_confusion_matrix.jpg')
 
-    plt.figure(figsize=(8, 6))
-    plt.imshow(cm, interpolation='nearest', cmap=cmap)
-    plt.title(f'{model_type} Confusion Matrix')
-    plt.colorbar()
-
-    if classes is not None:
-        tick_marks = np.arange(len(classes))
-        plt.xticks(tick_marks, classes, rotation=45)
-        plt.yticks(tick_marks, classes)
-
-    if normalize:
-        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-
-
-    thresh = cm.max() / 1.5 if normalize else cm.max() / 2
-    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
-        if normalize:
-            plt.text(j, i, "{:0.4f}".format(cm[i, j]),
-                    horizontalalignment="center",
-                    color="white" if cm[i, j] > thresh else "black")
-        else:
-            plt.text(j, i, "{:,}".format(cm[i, j]),
-                    horizontalalignment="center",
-                    color="white" if cm[i, j] > thresh else "black")
-
-
-    plt.tight_layout()
-    plt.ylabel('True label')
-    plt.xlabel(f'Predicted label\nAccuracy: {test_acc:.2f} - LossS: {test_loss:.2f} - Misclassification: {misclass:.2f}')
-    # plt.show()
-    plt.savefig(f'./plots/{model_type}/{time_stamp}_confusion_matrix_size.jpeg')
     if save_as_tex:
         tikzplotlib.save(f'./plots/{model_type}/{time_stamp}_confusion_matrix_size.tex')
     plt.close()
