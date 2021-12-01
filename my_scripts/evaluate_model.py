@@ -1,12 +1,14 @@
 import os 
 import argparse
+import pathlib
 
 import numpy as np 
 from sklearn import metrics 
 
 from tensorflow import keras
 import tensorflow as tf
-
+import time 
+import pathlib 
 from helpers import plot_confusion_matrix
 
 def get_parser():
@@ -38,7 +40,7 @@ def load_test_data():
     )
     return test_ds
 
-def evaluate_model_on_test_data(model, model_type: str, time_stamp: int):
+def evaluate_model_on_test_data(model, model_type: str, target_path: pathlib.Path):
     test_ds = load_test_data()
     predictions = model.predict(test_ds)
     test_loss, test_acc = model.evaluate(test_ds)
@@ -49,7 +51,15 @@ def evaluate_model_on_test_data(model, model_type: str, time_stamp: int):
     print(cm)
     
     # plot confusion matrix
-    plot_confusion_matrix(cm, test_loss, test_acc, classes=target_classes, time_stamp=time_stamp, model_type=model_type)
+    plot_confusion_matrix(
+            one_hot_labels=one_hot_labels, 
+            predictions=predictions, 
+            test_loss=test_loss, 
+            test_acc=test_acc, 
+            target_classes=target_classes, 
+            target_path=target_path,
+            model_type=model_type,
+            save_as_tex=True)
 
 def main():
     
@@ -67,8 +77,9 @@ def main():
         
     model_dir = args.model_dir# #'../my_scripts/models/EfficientNet/en_dense_74_0.90.h5'
     model = keras.models.load_model(model_dir)
-    import time 
-    evaluate_model_on_test_data(model, model_type, time_stamp=int(time.time()))
+    
+    target_path = pathlib.Path('experiments') / model_type / str(int(time.time()))
+    evaluate_model_on_test_data(model, model_type, target_path)
 
 
 if __name__ == '__main__':

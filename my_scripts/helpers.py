@@ -46,7 +46,7 @@ def load_train_val_data(image_size=(384, 512), batch_size=16):
     return train_ds, val_ds
 
 
-def plot_loss(history, time_stamp, batch_size, image_size, model_type, epochs, save_as_tex=True):
+def plot_loss(history, experiment_path: pathlib.Path, batch_size, image_size, model_type, epochs, save_as_tex=True):
     plt.figure()
     plt.title(f'Simple NN Loss - batch size {batch_size}')
     plt.xlabel('Epoch')
@@ -55,13 +55,13 @@ def plot_loss(history, time_stamp, batch_size, image_size, model_type, epochs, s
     plt.plot(range(1, epochs+1), history.history['loss'])
     plt.legend(['Validation Loss', 'Training Loss'])
     
-    plt.savefig(f'./plots/{model_type}/{time_stamp}_loss_size_{image_size[0]}_{image_size[1]}.jpeg')
+    plt.savefig(experiment_path / f'loss_size_{image_size[0]}_{image_size[1]}.jpeg')
     if save_as_tex:
-        tikzplotlib.save(f'./plots/{model_type}/{time_stamp}_loss_size_{image_size[0]}_{image_size[1]}.tex')
+        tikzplotlib.save(experiment_path / f'loss_size_{image_size[0]}_{image_size[1]}.tex')
     plt.close()
 
 
-def plot_accuracy(history, time_stamp, batch_size, image_size, model_type, epochs, save_as_tex=True):
+def plot_accuracy(history, experiment_path: pathlib.Path, batch_size, image_size, model_type, epochs, save_as_tex=True):
     plt.figure()
     plt.title(f'Simple NN Accuracy - batch size {batch_size}')
     plt.xlabel('Epoch')
@@ -69,27 +69,37 @@ def plot_accuracy(history, time_stamp, batch_size, image_size, model_type, epoch
     plt.plot(range(1, epochs+1), history.history['val_accuracy'])
     plt.plot(range(1, epochs+1), history.history['accuracy'])
     plt.legend(['Validation Accuracy', 'Training Accuracy'])
-    plt.savefig(f'./plots/{model_type}/{time_stamp}_acc_size_{image_size[0]}_{image_size[1]}.jpeg')
+    plt.savefig(experiment_path / f'acc_size_{image_size[0]}_{image_size[1]}.jpeg')
     if save_as_tex:
-        tikzplotlib.save(f'./plots/{model_type}/{time_stamp}_acc_size_{image_size[0]}_{image_size[1]}.tex')
+        tikzplotlib.save(experiment_path / f'acc_size_{image_size[0]}_{image_size[1]}.tex')
     plt.close()
 
 
-def plot_confusion_matrix(one_hot_labels, predictions, test_loss, test_acc, target_classes, time_stamp, model_type, save_as_tex=True):
+def plot_confusion_matrix(one_hot_labels, predictions, test_loss, test_acc, target_classes, target_path, model_type, save_as_tex=True):
+    style.use('classic')
     plt.title(f'{model_type} Model Confusion Matrix - Loss: {test_loss:.2f} - Test Acc: {test_acc:.2f}')
 
     f = plt.figure(figsize=(10,7))
     ax = f.add_subplot(111)
     plt.title(f'{model_type} Model Confusion Matrix - Loss: {test_loss:.2f} - Test Acc: {test_acc:.2f}')
     metrics.ConfusionMatrixDisplay.from_predictions(y_true=one_hot_labels.argmax(axis=1), y_pred=predictions.argmax(axis=1), display_labels=target_classes,cmap='magma', ax=ax, colorbar=False)
-    plt.savefig(f'./plots/{model_type}/{time_stamp}_confusion_matrix.jpg')
+    plt.savefig(target_path / 'confusion_matrix.jpeg')
 
     if save_as_tex:
-        tikzplotlib.save(f'./plots/{model_type}/{time_stamp}_confusion_matrix_size.tex')
+        tikzplotlib.save((target_path / 'confusion_matrix.tex'))
     plt.close()
+    style.use('ggplot')
 
-
-
+def make_experiment_dir(model_type, time_stamp):
+    import pathlib
+    import os
+    new_path = pathlib.Path('experiments') / model_type / str(time_stamp)
+    if not new_path.exists():
+        os.makedirs(new_path)
+        os.makedirs(new_path / 'models')
+        os.makedirs(new_path / 'plots')
+    return new_path
+    
 def configure_gpu_memory_growth():
     gpus = tf.config.list_physical_devices('GPU')
     if gpus:

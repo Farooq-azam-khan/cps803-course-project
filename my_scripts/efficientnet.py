@@ -9,15 +9,24 @@ from helpers import (
                     load_train_val_data, 
                     plot_accuracy, 
                     plot_loss, 
-                    configure_gpu_memory_growth
+                    configure_gpu_memory_growth, 
+                    make_experiment_dir
                     )   
 
 from evaluate_model import evaluate_model_on_test_data
+import argparse 
 
+def get_parser():
+    parser = argparse.ArgumentParser(description='Run Efficient net model')
+    parser.add_argument('--batch-size', required=True, type=int, help='Batch size', default=16)
+    parser.add_argument('--epochs', required=True, type=int,
+                        help='Number of epochs', default=10)
+
+    return parser 
 IMG_PIXELS = 224
 image_size = (IMG_PIXELS, IMG_PIXELS)
 batch_size = 16
-model_type = 'EfficientNet'
+model_type = 'EfficientNetB0'
 epochs = 5#50#100
 learning_rate = 1e-5
 
@@ -61,17 +70,22 @@ def build_efficient_net_model(num_classes):
     )
     return model
 
+
 def main():
     configure_gpu_memory_growth()
     print('Loading Data...')
     train_ds, val_ds = load_train_val_data(image_size=image_size, batch_size=batch_size)
-
+    # new style of saving data: 
+    # experiments/{model_type}/{timestamp}/models
+    # experiments/{model_type}/{timestamp}/plots
     model = build_efficient_net_model(num_classes=6)
     time_stamp = int(time.time())
-
+    experiment_dir = make_experiment_dir(model_type, str(time_stamp)) # have access to 'experiment_dir/models', 'experiment_dir/plots'
+    experiment_dir_models = experiment_dir / 'models'
+    experiment_dir_plots = experiment_dir / 'plots'
     callbacks = [
         keras.callbacks.ModelCheckpoint(
-            filepath='./models/EfficientNet/en_dense_no_dropout_{epoch}_{val_accuracy:.2f}.h5',
+            filepath=experiment_dir_models / 'en_dense_no_dropout_{epoch}_{val_accuracy:.2f}.h5',
             monitor='val_accuracy',
             save_best_only=True,
             mode='max'# max becuase we want to save based on val_accuracy (if loss then min)
@@ -79,11 +93,11 @@ def main():
     ]
     
     hist = model.fit(train_ds, epochs=epochs, callbacks=callbacks, validation_data=val_ds, verbose=1)
-    plot_accuracy(hist, time_stamp, batch_size, image_size, model_type, epochs, save_as_tex=True)
-    plot_loss(hist, time_stamp, batch_size, image_size, model_type, epochs, save_as_tex=True)
+    plot_accuracy(hist, experiment_dir_plots, batch_size, image_size, model_type, epochs, save_as_tex=True)
+    plot_loss(hist, experiment_dir_plots, batch_size, image_size, model_type, epochs, save_as_tex=True)
 
     print('Evaluating Model...')
-    evaluate_model_on_test_data(model, model_type, time_stamp)
+    evaluate_model_on_test_data(model, model_type, experiment_dir_plots)
 
 if __name__ == '__main__':
     main()
