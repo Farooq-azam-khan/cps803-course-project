@@ -15,8 +15,8 @@ def get_parser():
     parser = argparse.ArgumentParser(description='Evaluate the model')
     parser.add_argument('--model-dir', required=True, type=str,
                     help='Where is the model?')
-    parser.add_argument('--model-type', required=True, type=str,
-                    help='What model is it (NN, CNN, Resnet, EfficientNet)?')
+    # parser.add_argument('--model-type', required=True, type=str,
+    #                 help='What model is it (NN, CNN, Resnet, EfficientNet)?')
 
     return parser 
 
@@ -40,7 +40,9 @@ def load_test_data():
     )
     return test_ds
 
+import time 
 def evaluate_model_on_test_data(model, model_type: str, target_path: pathlib.Path):
+    time_stamp = int(time.time())
     test_ds = load_test_data()
     predictions = model.predict(test_ds)
     test_loss, test_acc = model.evaluate(test_ds)
@@ -49,7 +51,7 @@ def evaluate_model_on_test_data(model, model_type: str, target_path: pathlib.Pat
 
     cm = metrics.confusion_matrix(y_true=one_hot_labels.argmax(axis=1), y_pred=predictions.argmax(axis=1))#, labels=target_classes)
     print(cm)
-    np.save(target_path / 'confusion_matrix.npy', cm)
+    np.save(target_path / f'{time_stamp}_confusion_matrix.npy', cm)
     
     # plot confusion matrix
     plot_confusion_matrix(
@@ -60,6 +62,7 @@ def evaluate_model_on_test_data(model, model_type: str, target_path: pathlib.Pat
             target_classes=target_classes, 
             target_path=target_path,
             model_type=model_type,
+            time_stamp=time_stamp,
             save_as_tex=True)
 
 def main():
@@ -70,16 +73,22 @@ def main():
         raise ValueError(f'Model directory {args.model_dir} does not exist')
 
     print(f'Loading Model from {args.model_dir}')
-
-    model_type = args.model_type
-    if not os.path.exists(f'../my_scripts/plots/{model_type}'):
-        # os.mkdir(f'../my_scripts/plots/{model_type}')
-        raise ValueError(f'{model_type} dir does not exist. Have you trained it?')
+    model_path = pathlib.Path(args.model_dir)
+    experiment_path = model_path.parent.parent # assuming experiments/{model_type}/{timestamp}/[models, plots]
+    plot_dir = experiment_path / 'plots'
+    if not os.path.exists(plot_dir):
+        raise ValueError(f'Plot directory {plot_dir} does not exist. Have you trained the model?')
+    # model_type = args.model_type
+    # if not os.path.exists(f'../my_scripts/plots/{model_type}'):
+    #     # os.mkdir(f'../my_scripts/plots/{model_type}')
+    #     raise ValueError(f'{model_type} dir does not exist. Have you trained it?')
         
-    model_dir = args.model_dir# #'../my_scripts/models/EfficientNet/en_dense_74_0.90.h5'
-    model = keras.models.load_model(model_dir)
+    # model_dir = args.model_dir# #'../my_scripts/models/EfficientNet/en_dense_74_0.90.h5'
+    print('Loading model...')
+    model = keras.models.load_model(model_path)
     
-    target_path = pathlib.Path('experiments') / model_type / str(int(time.time()))
+    target_path = plot_dir
+    model_type = experiment_path.parent.stem
     evaluate_model_on_test_data(model, model_type, target_path)
 
 

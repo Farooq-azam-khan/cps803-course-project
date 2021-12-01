@@ -74,7 +74,7 @@ def plot_accuracy(history, experiment_path: pathlib.Path, batch_size, image_size
     plt.close()
 
 
-def plot_confusion_matrix(one_hot_labels, predictions, test_loss, test_acc, target_classes, target_path, model_type, save_as_tex=True):
+def plot_confusion_matrix(one_hot_labels, predictions, test_loss, test_acc, target_classes, target_path, model_type, time_stamp:int, save_as_tex=True):
     style.use('classic')
     plt.title(f'{model_type} Model Confusion Matrix - Loss: {test_loss:.2f} - Test Acc: {test_acc:.2f}')
 
@@ -82,7 +82,7 @@ def plot_confusion_matrix(one_hot_labels, predictions, test_loss, test_acc, targ
     ax = f.add_subplot(111)
     plt.title(f'{model_type} Model Confusion Matrix - Loss: {test_loss:.2f} - Test Acc: {test_acc:.2f}')
     metrics.ConfusionMatrixDisplay.from_predictions(y_true=one_hot_labels.argmax(axis=1), y_pred=predictions.argmax(axis=1), display_labels=target_classes,cmap='magma', ax=ax, colorbar=False)
-    plt.savefig(target_path / 'confusion_matrix.jpeg')
+    plt.savefig(target_path / f'{time_stamp}_confusion_matrix.jpeg')
 
     if save_as_tex:
         pass 
