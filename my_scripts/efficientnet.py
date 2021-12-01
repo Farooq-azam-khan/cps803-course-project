@@ -15,15 +15,7 @@ from helpers import (
                     )   
 
 from evaluate_model import evaluate_model_on_test_data
-import argparse 
 
-def get_parser():
-    parser = argparse.ArgumentParser(description='Run Efficient net model')
-    parser.add_argument('--batch-size', required=True, type=int, help='Batch size', default=16)
-    parser.add_argument('--epochs', required=True, type=int,
-                        help='Number of epochs', default=10)
-
-    return parser 
 IMG_PIXELS = 224
 image_size = (IMG_PIXELS, IMG_PIXELS)
 batch_size = 16
