@@ -10,7 +10,8 @@ from helpers import (
                     plot_accuracy, 
                     plot_loss, 
                     configure_gpu_memory_growth, 
-                    make_experiment_dir
+                    make_experiment_dir, 
+                    save_history
                     )   
 
 from evaluate_model import evaluate_model_on_test_data
@@ -93,6 +94,7 @@ def main():
     ]
     
     hist = model.fit(train_ds, epochs=epochs, callbacks=callbacks, validation_data=val_ds, verbose=1)
+    save_history(hist.history, experiment_dir_plots)
     plot_accuracy(hist, experiment_dir_plots, batch_size, image_size, model_type, epochs, save_as_tex=True)
     plot_loss(hist, experiment_dir_plots, batch_size, image_size, model_type, epochs, save_as_tex=True)
 

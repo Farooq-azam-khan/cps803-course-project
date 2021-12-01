@@ -1,7 +1,6 @@
 import tensorflow as tf 
 import pathlib 
 import matplotlib.pyplot as plt
-import itertools
 import numpy as np
 from matplotlib import style
 import tikzplotlib
@@ -113,3 +112,6 @@ def configure_gpu_memory_growth():
         except RuntimeError as e:
             # Memory growth must be set before GPUs have been initialized
             print(e)
+
+def save_history(history, experiment_path: pathlib.Path):
+    np.save(experiment_path / 'history.npy', history)

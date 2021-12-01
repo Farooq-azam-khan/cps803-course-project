@@ -49,6 +49,7 @@ def evaluate_model_on_test_data(model, model_type: str, target_path: pathlib.Pat
 
     cm = metrics.confusion_matrix(y_true=one_hot_labels.argmax(axis=1), y_pred=predictions.argmax(axis=1))#, labels=target_classes)
     print(cm)
+    np.save(target_path / 'confusion_matrix.npy', cm)
     
     # plot confusion matrix
     plot_confusion_matrix(
