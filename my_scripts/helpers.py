@@ -117,3 +117,12 @@ def configure_gpu_memory_growth():
 
 def save_history(history, experiment_path: pathlib.Path):
     np.save(experiment_path / 'history.npy', history)
+
+def get_augmentation_layer():
+    return tf.keras.models.Sequential(
+        [ tf.keras.layers.RandomRotation(factor=0.15)
+        , tf.keras.layers.RandomTranslation(height_factor=0.1, width_factor=0.1)
+        , tf.keras.layers.RandomFlip()
+        , tf.keras.layers.RandomContrast(factor=0.1)
+        ], name='img_augmentation',
+    )

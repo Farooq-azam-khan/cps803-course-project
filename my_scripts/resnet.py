@@ -1,50 +1,34 @@
-
 from tensorflow.keras import layers 
 import tensorflow as tf
 import time 
 from tensorflow import keras
-from tensorflow.keras.applications import ResNet50#https://keras.io/api/applications/resnet/
+#https://keras.io/api/applications/resnet/
+from tensorflow.keras.applications import ResNet50
+
+
 from helpers import (
                     load_train_val_data, 
                     plot_accuracy, 
-                    plot_loss
+                    plot_loss, 
+                    configure_gpu_memory_growth, 
+                    make_experiment_dir, 
+                    save_history, 
+                    get_augmentation_layer
                     )   
+
+from evaluate_model import evaluate_model_on_test_data
 
 IMG_PIXELS = 224
 image_size = (IMG_PIXELS, IMG_PIXELS)
 batch_size = 16
-model_type = 'resnet'
+model_type = 'ResNet50'
 epochs = 10#50#100
 learning_rate = 1e-5
 
-img_augmentation = tf.keras.models.Sequential(
-    [
-        layers.RandomRotation(factor=0.15),
-        layers.RandomTranslation(height_factor=0.1, width_factor=0.1),
-        layers.RandomFlip(),
-        layers.RandomContrast(factor=0.1),
-    ],
-    name='img_augmentation',
-)
-
-
-def configure_gpu_memory_growth():
-    gpus = tf.config.list_physical_devices('GPU')
-    if gpus:
-        print('Found GPU on Device, configuring memory growth')
-        try:
-            # Currently, memory growth needs to be the same across GPUs
-            for gpu in gpus:
-                tf.config.experimental.set_memory_growth(gpu, True)
-            logical_gpus = tf.config.list_logical_devices('GPU')
-            print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
-        except RuntimeError as e:
-            # Memory growth must be set before GPUs have been initialized
-            print(e)
 
 def build_resnet_net_model(num_classes):
     inputs = layers.Input(shape=(IMG_PIXELS,IMG_PIXELS, 3))
-    x = img_augmentation(inputs)
+    x = get_augmentation_layer()(inputs)
     #model = EfficientNetB0(include_top=False, input_tensor=inputs, weights='imagenet')
     model = ResNet50(include_top=False, input_tensor=inputs, weights='imagenet')
     # Freeze the pretrained weights
@@ -70,29 +54,36 @@ def build_resnet_net_model(num_classes):
     )
     return model
 
+
+
 def main():
     configure_gpu_memory_growth()
     print('Loading Data...')
     train_ds, val_ds = load_train_val_data(image_size=image_size, batch_size=batch_size)
-
+    # new style of saving data: 
+    # experiments/{model_type}/{timestamp}/models
+    # experiments/{model_type}/{timestamp}/plots
     model = build_resnet_net_model(num_classes=6)
     time_stamp = int(time.time())
-
+    experiment_dir = make_experiment_dir(model_type, str(time_stamp)) # have access to 'experiment_dir/models', 'experiment_dir/plots'
+    experiment_dir_models = experiment_dir / 'models'
+    experiment_dir_plots = experiment_dir / 'plots'
     callbacks = [
         keras.callbacks.ModelCheckpoint(
-            filepath='./models/resnet/en_dense_no_dropout_{epoch}_{val_accuracy:.2f}.h5',
+            filepath=experiment_dir_models / 'en_dense_no_dropout_{epoch}_{val_accuracy:.2f}.h5',
             monitor='val_accuracy',
             save_best_only=True,
             mode='max'# max becuase we want to save based on val_accuracy (if loss then min)
         )
     ]
     
-    hist = model.fit(train_ds, epochs=epochs, callbacks=callbacks, validation_data=val_ds, verbose=2)
-    import numpy as np 
-    np.save('./models/resnet/hist_'+str(time_stamp)+'.npy', hist.history)
-    plot_accuracy(hist, time_stamp, batch_size, image_size, model_type, epochs)
-    plot_loss(hist, time_stamp, batch_size, image_size, model_type, epochs)
+    hist = model.fit(train_ds, epochs=epochs, callbacks=callbacks, validation_data=val_ds, verbose=1)
+    save_history(hist.history, experiment_dir_plots)
+    plot_accuracy(hist, experiment_dir_plots, batch_size, image_size, model_type, epochs, save_as_tex=True)
+    plot_loss(hist, experiment_dir_plots, batch_size, image_size, model_type, epochs, save_as_tex=True)
 
+    print('Evaluating Model...')
+    evaluate_model_on_test_data(model, model_type, experiment_dir_plots)
 
 if __name__ == '__main__':
     main()

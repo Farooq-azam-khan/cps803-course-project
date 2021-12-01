@@ -11,7 +11,8 @@ from helpers import (
                     plot_loss, 
                     configure_gpu_memory_growth, 
                     make_experiment_dir, 
-                    save_history
+                    save_history, 
+                    get_augmentation_layer
                     )   
 
 from evaluate_model import evaluate_model_on_test_data
@@ -20,24 +21,24 @@ IMG_PIXELS = 224
 image_size = (IMG_PIXELS, IMG_PIXELS)
 batch_size = 16
 model_type = 'EfficientNetB0'
-epochs = 5#50#100
+epochs = 50#100
 learning_rate = 1e-5
 
-img_augmentation = tf.keras.models.Sequential(
-    [
-        layers.RandomRotation(factor=0.15),
-        layers.RandomTranslation(height_factor=0.1, width_factor=0.1),
-        layers.RandomFlip(),
-        layers.RandomContrast(factor=0.1),
-    ],
-    name='img_augmentation',
-)
+# img_augmentation = tf.keras.models.Sequential(
+#     [
+#         layers.RandomRotation(factor=0.15),
+#         layers.RandomTranslation(height_factor=0.1, width_factor=0.1),
+#         layers.RandomFlip(),
+#         layers.RandomContrast(factor=0.1),
+#     ],
+#     name='img_augmentation',
+# )
 
 
 
 def build_efficient_net_model(num_classes):
     inputs = layers.Input(shape=(IMG_PIXELS,IMG_PIXELS, 3))
-    x = img_augmentation(inputs)
+    x = get_augmentation_layer()(inputs)
     model = EfficientNetB0(include_top=False, input_tensor=inputs, weights='imagenet')
 
     # Freeze the pretrained weights
