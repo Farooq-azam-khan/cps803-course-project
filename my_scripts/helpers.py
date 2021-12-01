@@ -114,3 +114,19 @@ def plot_confusion_matrix(cm, test_loss, test_acc, classes, time_stamp, model_ty
     if save_as_tex:
         tikzplotlib.save(f'./plots/{model_type}/{time_stamp}_confusion_matrix_size.tex')
     plt.close()
+
+
+
+def configure_gpu_memory_growth():
+    gpus = tf.config.list_physical_devices('GPU')
+    if gpus:
+        print('Found GPU on Device, configuring memory growth')
+        try:
+            # Currently, memory growth needs to be the same across GPUs
+            for gpu in gpus:
+                tf.config.experimental.set_memory_growth(gpu, True)
+            logical_gpus = tf.config.list_logical_devices('GPU')
+            print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+        except RuntimeError as e:
+            # Memory growth must be set before GPUs have been initialized
+            print(e)

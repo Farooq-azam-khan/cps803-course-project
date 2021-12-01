@@ -8,14 +8,17 @@ from tensorflow import keras
 from helpers import (
                     load_train_val_data, 
                     plot_accuracy, 
-                    plot_loss
+                    plot_loss, 
+                    configure_gpu_memory_growth
                     )   
+
+from evaluate_model import evaluate_model_on_test_data
 
 IMG_PIXELS = 224
 image_size = (IMG_PIXELS, IMG_PIXELS)
 batch_size = 16
 model_type = 'EfficientNet'
-epochs = 50#100
+epochs = 5#50#100
 learning_rate = 1e-5
 
 img_augmentation = tf.keras.models.Sequential(
@@ -29,19 +32,6 @@ img_augmentation = tf.keras.models.Sequential(
 )
 
 
-def configure_gpu_memory_growth():
-    gpus = tf.config.list_physical_devices('GPU')
-    if gpus:
-        print('Found GPU on Device, configuring memory growth')
-        try:
-            # Currently, memory growth needs to be the same across GPUs
-            for gpu in gpus:
-                tf.config.experimental.set_memory_growth(gpu, True)
-            logical_gpus = tf.config.list_logical_devices('GPU')
-            print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
-        except RuntimeError as e:
-            # Memory growth must be set before GPUs have been initialized
-            print(e)
 
 def build_efficient_net_model(num_classes):
     inputs = layers.Input(shape=(IMG_PIXELS,IMG_PIXELS, 3))
@@ -88,9 +78,12 @@ def main():
         )
     ]
     
-    hist = model.fit(train_ds, epochs=epochs, callbacks=callbacks, validation_data=val_ds, verbose=2)
-    plot_accuracy(hist, time_stamp, batch_size, image_size, model_type, epochs)
-    plot_loss(hist, time_stamp, batch_size, image_size, model_type, epochs)
+    hist = model.fit(train_ds, epochs=epochs, callbacks=callbacks, validation_data=val_ds, verbose=1)
+    plot_accuracy(hist, time_stamp, batch_size, image_size, model_type, epochs, save_as_tex=True)
+    plot_loss(hist, time_stamp, batch_size, image_size, model_type, epochs, save_as_tex=True)
+
+    print('Evaluating Model...')
+    evaluate_model_on_test_data(model, model_type, time_stamp)
 
 if __name__ == '__main__':
     main()
