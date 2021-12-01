@@ -85,7 +85,9 @@ def plot_confusion_matrix(one_hot_labels, predictions, test_loss, test_acc, targ
     plt.savefig(target_path / 'confusion_matrix.jpeg')
 
     if save_as_tex:
-        tikzplotlib.save((target_path / 'confusion_matrix.tex'))
+        pass 
+        # code below does not work 
+        # tikzplotlib.save((target_path / 'confusion_matrix.tex'))
     plt.close()
     style.use('ggplot')
 
