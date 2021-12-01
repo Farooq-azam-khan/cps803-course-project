@@ -15,6 +15,7 @@ def get_parser():
     parser = argparse.ArgumentParser(description='Evaluate the model')
     parser.add_argument('--model-dir', required=True, type=str,
                     help='Where is the model?')
+    parser.add_argument('--image-pixels', required=True, type=int, help='(pixels, pixels, 3)')
     # parser.add_argument('--model-type', required=True, type=str,
     #                 help='What model is it (NN, CNN, Resnet, EfficientNet)?')
 
@@ -27,7 +28,7 @@ IMG_PIXELS = 224
 image_size = (IMG_PIXELS, IMG_PIXELS)
 target_classes = ['cardboard', 'glass', 'metal', 'paper', 'plastic', 'trash']
 
-def load_test_data():
+def load_test_data(image_size=(224, 224)):
 
     print('Loading test data')
     test_ds = tf.keras.preprocessing.image_dataset_from_directory(
@@ -41,9 +42,9 @@ def load_test_data():
     return test_ds
 
 import time 
-def evaluate_model_on_test_data(model, model_type: str, target_path: pathlib.Path):
+def evaluate_model_on_test_data(model, image_size, model_type: str, target_path: pathlib.Path):
     time_stamp = int(time.time())
-    test_ds = load_test_data()
+    test_ds = load_test_data(image_size=image_size)
     predictions = model.predict(test_ds)
     test_loss, test_acc = model.evaluate(test_ds)
 
@@ -74,6 +75,7 @@ def main():
 
     print(f'Loading Model from {args.model_dir}')
     model_path = pathlib.Path(args.model_dir)
+    IMG_PIXELS = args.image_pixels
     experiment_path = model_path.parent.parent # assuming experiments/{model_type}/{timestamp}/[models, plots]
     plot_dir = experiment_path / 'plots'
     if not os.path.exists(plot_dir):
@@ -89,7 +91,7 @@ def main():
     
     target_path = plot_dir
     model_type = experiment_path.parent.stem
-    evaluate_model_on_test_data(model, model_type, target_path)
+    evaluate_model_on_test_data(model=model, model_type=model_type, target_path=target_path, image_size=(IMG_PIXELS,IMG_PIXELS))
 
 
 if __name__ == '__main__':
