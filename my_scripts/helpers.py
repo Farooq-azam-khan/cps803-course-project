@@ -47,7 +47,7 @@ def load_train_val_data(image_size=(384, 512), batch_size=16):
 
 def plot_loss(history, experiment_path: pathlib.Path, batch_size, image_size, model_type, epochs, save_as_tex=True):
     plt.figure()
-    plt.title(f'Simple NN Loss - batch size {batch_size}')
+    plt.title(f'{model_type} Loss - batch size {batch_size}')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.plot(range(1, epochs+1), history.history['val_loss'])
@@ -62,7 +62,7 @@ def plot_loss(history, experiment_path: pathlib.Path, batch_size, image_size, mo
 
 def plot_accuracy(history, experiment_path: pathlib.Path, batch_size, image_size, model_type, epochs, save_as_tex=True):
     plt.figure()
-    plt.title(f'Simple NN Accuracy - batch size {batch_size}')
+    plt.title(f'{model_type} Accuracy - batch size {batch_size}')
     plt.xlabel('Epoch')
     plt.ylabel('Accuracy')
     plt.plot(range(1, epochs+1), history.history['val_accuracy'])
