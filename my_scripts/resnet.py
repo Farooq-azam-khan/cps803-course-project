@@ -3,7 +3,7 @@ import tensorflow as tf
 import time 
 from tensorflow import keras
 #https://keras.io/api/applications/resnet/
-from tensorflow.keras.applications import ResNet50
+from tensorflow.keras.applications import ResNet101
 
 
 from helpers import (
@@ -20,8 +20,8 @@ from evaluate_model import evaluate_model_on_test_data
 
 IMG_PIXELS = 224
 image_size = (IMG_PIXELS, IMG_PIXELS)
-batch_size = 32
-model_type = 'ResNet50'
+batch_size = 16
+model_type = 'ResNet101'
 epochs = 60
 learning_rate = 1e-5
 
@@ -30,7 +30,7 @@ def build_resnet_net_model(num_classes):
     inputs = layers.Input(shape=(IMG_PIXELS,IMG_PIXELS, 3))
     x = get_augmentation_layer()(inputs)
     #model = EfficientNetB0(include_top=False, input_tensor=inputs, weights='imagenet')
-    model = ResNet50(include_top=False, input_tensor=inputs, weights='imagenet')
+    model = ResNet101(include_top=False, input_tensor=inputs, weights='imagenet')
     # Freeze the pretrained weights
     model.trainable = False
 
