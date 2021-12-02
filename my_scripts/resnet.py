@@ -22,7 +22,7 @@ IMG_PIXELS = 224
 image_size = (IMG_PIXELS, IMG_PIXELS)
 batch_size = 16
 model_type = 'ResNet50'
-epochs = 10#50#100
+epochs = 100
 learning_rate = 1e-5
 
 
@@ -47,7 +47,7 @@ def build_resnet_net_model(num_classes):
     outputs = layers.Dense(num_classes, activation='softmax', name='pred')(x)
 
     # Compile
-    model = tf.keras.Model(inputs, outputs, name='EfficientNet')
+    model = tf.keras.Model(inputs, outputs, name=f'{model_type}')
     optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
     model.compile(
         optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy']
