@@ -20,9 +20,9 @@ from evaluate_model import evaluate_model_on_test_data
 
 IMG_PIXELS = 224
 image_size = (IMG_PIXELS, IMG_PIXELS)
-batch_size = 16
+batch_size = 32
 model_type = 'ResNet50'
-epochs = 100
+epochs = 60
 learning_rate = 1e-5
 
 
