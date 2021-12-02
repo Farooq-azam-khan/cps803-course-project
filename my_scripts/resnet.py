@@ -18,7 +18,7 @@ from helpers import (
 
 from evaluate_model import evaluate_model_on_test_data
 
-IMG_PIXELS = 224
+IMG_PIXELS = 256
 image_size = (IMG_PIXELS, IMG_PIXELS)
 batch_size = 32
 model_type = 'ResNet101'
