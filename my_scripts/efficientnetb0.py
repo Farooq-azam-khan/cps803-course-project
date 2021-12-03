@@ -29,7 +29,7 @@ model_type = 'EfficientNetB0'
 if add_regularization:
     model_type = 'EfficientNetB0-regularized'
 
-epochs = 50#100
+epochs = 40#50#100
 learning_rate = 1e-5
 
 
