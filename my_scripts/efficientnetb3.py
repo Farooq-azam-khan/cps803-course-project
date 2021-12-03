@@ -1,5 +1,5 @@
 #https://keras.io/examples/vision/image_classification_efficientnet_fine_tuning/
-from tensorflow.keras.applications import EfficientNetB0
+from tensorflow.keras.applications import EfficientNetB3
 from tensorflow.keras import layers 
 import tensorflow as tf
 import time 
@@ -17,10 +17,10 @@ from helpers import (
 
 from evaluate_model import evaluate_model_on_test_data
 
-IMG_PIXELS = 224
+IMG_PIXELS = 300
 image_size = (IMG_PIXELS, IMG_PIXELS)
 batch_size = 16
-model_type = 'EfficientNetB0'
+model_type = 'EfficientNetB3'
 epochs = 50#100
 learning_rate = 1e-5
 
@@ -29,7 +29,7 @@ learning_rate = 1e-5
 def build_efficient_net_model(num_classes):
     inputs = layers.Input(shape=(IMG_PIXELS,IMG_PIXELS, 3))
     x = get_augmentation_layer()(inputs)
-    model = EfficientNetB0(include_top=False, input_tensor=inputs, weights='imagenet')
+    model = EfficientNetB3(include_top=False, input_tensor=inputs, weights='imagenet')
 
     # Freeze the pretrained weights
     model.trainable = False
@@ -41,7 +41,6 @@ def build_efficient_net_model(num_classes):
     # top_dropout_rate = 0.2
     #x = layers.Dropout(top_dropout_rate, name='top_dropout')(x)
     # taper of the layer nodes
-    # TODO: add regularization to the kernel 
     x = layers.Dense(800, name='dense_800', activation='relu')(x)
     x = layers.Dense(600, name='dense_600', activation='relu')(x)
     x = layers.Dense(100, name='dense_100', activation='relu')(x)
@@ -70,7 +69,7 @@ def main():
     experiment_dir_plots = experiment_dir / 'plots'
     callbacks = [
         keras.callbacks.ModelCheckpoint(
-            filepath=experiment_dir_models / 'enb1_dense_no_dropout_{epoch}_{val_accuracy:.2f}.h5',
+            filepath=experiment_dir_models / 'en_dense_no_dropout_{epoch}_{val_accuracy:.2f}.h5',
             monitor='val_accuracy',
             save_best_only=True,
             mode='max'# max becuase we want to save based on val_accuracy (if loss then min)

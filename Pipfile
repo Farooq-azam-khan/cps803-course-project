@@ -6,12 +6,14 @@ name = "pypi"
 [packages]
 pandas = "*"
 numpy = "*"
-matplotlib = "*"
 sklearn = "*"
 jupyterlab = "*"
 tqdm = "*"
 tensorflow-gpu = "*"
 pydot = "*"
+seaborn = "*"
+matplotlib = "*"
+tikzplotlib = "*"
 
 [dev-packages]
 
