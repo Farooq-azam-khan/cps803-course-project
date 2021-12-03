@@ -81,7 +81,7 @@ def main():
     plot_loss(hist, experiment_dir_plots, batch_size, image_size, model_type, epochs, save_as_tex=True)
 
     print('Evaluating Model...')
-    evaluate_model_on_test_data(model, model_type, experiment_dir_plots)
+    evaluate_model_on_test_data(model, image_size, model_type, experiment_dir_plots)
 
 if __name__ == '__main__':
     main()

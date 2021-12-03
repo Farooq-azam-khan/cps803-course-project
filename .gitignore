@@ -4,4 +4,5 @@ data
 */logs
 *.amlignore*
 *.amltmp*
-*.tex 
+*.tex
+__pycache__/ 
