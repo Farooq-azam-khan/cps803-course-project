@@ -4,6 +4,7 @@ from tensorflow.keras import layers
 import tensorflow as tf
 import time 
 from tensorflow import keras
+from tensorflow.keras import regularizers
 
 from helpers import (
                     load_train_val_data, 
@@ -20,8 +21,13 @@ from evaluate_model import evaluate_model_on_test_data
 IMG_PIXELS = 240
 image_size = (IMG_PIXELS, IMG_PIXELS)
 batch_size = 16
+add_regularization = True
+regularization_rate = 0 # 1e-3
 model_type = 'EfficientNetB1'
-epochs = 50#100
+if add_regularization:
+    model_type = 'EfficientNetB1-regularized'
+    regularization_rate = 1e-3
+epochs = 40#50#100
 learning_rate = 1e-5
 
 
@@ -41,9 +47,9 @@ def build_efficient_net_model(num_classes):
     # top_dropout_rate = 0.2
     #x = layers.Dropout(top_dropout_rate, name='top_dropout')(x)
     # taper of the layer nodes
-    x = layers.Dense(800, name='dense_800', activation='relu')(x)
-    x = layers.Dense(600, name='dense_600', activation='relu')(x)
-    x = layers.Dense(100, name='dense_100', activation='relu')(x)
+    x = layers.Dense(800, name='dense_800', activation='relu', kernel_regularizer=regularizers.l2(regularization_rate))(x)
+    x = layers.Dense(600, name='dense_600', activation='relu', kernel_regularizer=regularizers.l2(regularization_rate))(x)
+    x = layers.Dense(100, name='dense_100', activation='relu', kernel_regularizer=regularizers.l2(regularization_rate))(x)
     outputs = layers.Dense(num_classes, activation='softmax', name='pred')(x)
 
     # Compile

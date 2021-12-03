@@ -23,11 +23,12 @@ from evaluate_model import evaluate_model_on_test_data
 IMG_PIXELS = 224
 image_size = (IMG_PIXELS, IMG_PIXELS)
 batch_size = 16
-add_regularization = False
-regularization_rate = 1e-3
+add_regularization = True
+regularization_rate = 0 # 1e-3
 model_type = 'EfficientNetB0'
 if add_regularization:
     model_type = 'EfficientNetB0-regularized'
+    regularization_rate = 1e-3
 
 epochs = 40#50#100
 learning_rate = 1e-5
