@@ -4,7 +4,9 @@ from tensorflow.keras import layers
 import tensorflow as tf
 import time 
 from tensorflow import keras
+from tensorflow.keras import regularizers
 
+# Custom Imports
 from helpers import (
                     load_train_val_data, 
                     plot_accuracy, 
@@ -17,10 +19,16 @@ from helpers import (
 
 from evaluate_model import evaluate_model_on_test_data
 
+# Hyper-parameters
 IMG_PIXELS = 224
 image_size = (IMG_PIXELS, IMG_PIXELS)
 batch_size = 16
+add_regularization = False
+regularization_rate = 1e-3
 model_type = 'EfficientNetB0'
+if add_regularization:
+    model_type = 'EfficientNetB0-regularized'
+
 epochs = 50#100
 learning_rate = 1e-5
 
@@ -41,10 +49,10 @@ def build_efficient_net_model(num_classes):
     # top_dropout_rate = 0.2
     #x = layers.Dropout(top_dropout_rate, name='top_dropout')(x)
     # taper of the layer nodes
-    # TODO: add regularization to the kernel 
-    x = layers.Dense(800, name='dense_800', activation='relu')(x)
-    x = layers.Dense(600, name='dense_600', activation='relu')(x)
-    x = layers.Dense(100, name='dense_100', activation='relu')(x)
+    
+    x = layers.Dense(800, name='dense_800', activation='relu', kernel_regularizer=regularizers.l2(regularization_rate))(x)
+    x = layers.Dense(600, name='dense_600', activation='relu', kernel_regularizer=regularizers.l2(regularization_rate))(x)
+    x = layers.Dense(100, name='dense_100', activation='relu', kernel_regularizer=regularizers.l2(regularization_rate))(x)
     outputs = layers.Dense(num_classes, activation='softmax', name='pred')(x)
 
     # Compile
@@ -83,7 +91,7 @@ def main():
     plot_loss(hist, experiment_dir_plots, batch_size, image_size, model_type, epochs, save_as_tex=True)
 
     print('Evaluating Model...')
-    evaluate_model_on_test_data(model, model_type, experiment_dir_plots)
+    evaluate_model_on_test_data(model, image_size, model_type, experiment_dir_plots)
 
 if __name__ == '__main__':
     main()

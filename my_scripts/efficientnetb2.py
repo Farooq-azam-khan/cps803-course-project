@@ -4,7 +4,6 @@ from tensorflow.keras import layers
 import tensorflow as tf
 import time 
 from tensorflow import keras
-
 from helpers import (
                     load_train_val_data, 
                     plot_accuracy, 
