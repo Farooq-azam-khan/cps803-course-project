@@ -21,6 +21,11 @@ IMG_PIXELS = 300
 image_size = (IMG_PIXELS, IMG_PIXELS)
 batch_size = 16
 model_type = 'EfficientNetB3'
+add_regularization = True
+regularization_rate = 0
+if add_regularization:
+    model_type = 'EfficientNetB3-regularized'
+    regularization_rate = 1e-3
 epochs = 50#100
 learning_rate = 1e-5
 
@@ -41,9 +46,9 @@ def build_efficient_net_model(num_classes):
     # top_dropout_rate = 0.2
     #x = layers.Dropout(top_dropout_rate, name='top_dropout')(x)
     # taper of the layer nodes
-    x = layers.Dense(800, name='dense_800', activation='relu')(x)
-    x = layers.Dense(600, name='dense_600', activation='relu')(x)
-    x = layers.Dense(100, name='dense_100', activation='relu')(x)
+    x = layers.Dense(800, name='dense_800', activation='relu', kernel_regularizer=regularizers.l2(regularization_rate))(x)
+    x = layers.Dense(600, name='dense_600', activation='relu', kernel_regularizer=regularizers.l2(regularization_rate))(x)
+    x = layers.Dense(100, name='dense_100', activation='relu', kernel_regularizer=regularizers.l2(regularization_rate))(x)
     outputs = layers.Dense(num_classes, activation='softmax', name='pred')(x)
 
     # Compile

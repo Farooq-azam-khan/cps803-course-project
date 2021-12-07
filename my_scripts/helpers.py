@@ -20,6 +20,7 @@ def get_plot_file_name(model_type, plot_type, time_stamp, image_size):
 
 
 def load_train_val_data(image_size=(384, 512), batch_size=16):
+    seed_value = 1337
     base_dir = pathlib.Path('..')
     data_train = base_dir / 'data' / 'train'
     print('Loading data')
@@ -28,7 +29,7 @@ def load_train_val_data(image_size=(384, 512), batch_size=16):
         validation_split=0.2,
         subset='training',
         label_mode='categorical',
-        seed=1337,
+        seed=seed_value,
         image_size=image_size,
         batch_size=batch_size,
     )
@@ -38,7 +39,7 @@ def load_train_val_data(image_size=(384, 512), batch_size=16):
         validation_split=0.2,
         subset='validation',
         label_mode='categorical',
-        seed=1337,
+        seed=seed_value,
         image_size=image_size,
         batch_size=batch_size,
     )

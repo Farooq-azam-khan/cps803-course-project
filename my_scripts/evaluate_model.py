@@ -45,6 +45,7 @@ import time
 def evaluate_model_on_test_data(model, image_size, model_type: str, target_path: pathlib.Path):
     time_stamp = int(time.time())
     test_ds = load_test_data(image_size=image_size)
+    # num_classes = len(test_ds.class_names)
     predictions = model.predict(test_ds)
     test_loss, test_acc = model.evaluate(test_ds)
 
@@ -60,11 +61,12 @@ def evaluate_model_on_test_data(model, image_size, model_type: str, target_path:
             predictions=predictions, 
             test_loss=test_loss, 
             test_acc=test_acc, 
-            target_classes=target_classes, 
+            target_classes=test_ds.class_names, 
             target_path=target_path,
             model_type=model_type,
             time_stamp=time_stamp,
             save_as_tex=True)
+    # TODO: what is precision, recall, f1 score used for?
 
 def main():
     

@@ -23,11 +23,12 @@ from evaluate_model import evaluate_model_on_test_data
 IMG_PIXELS = 224
 image_size = (IMG_PIXELS, IMG_PIXELS)
 batch_size = 16
-add_regularization = False
-regularization_rate = 1e-3
+add_regularization = True
+regularization_rate = 0 # 1e-3
 model_type = 'EfficientNetB0'
 if add_regularization:
     model_type = 'EfficientNetB0-regularized'
+    regularization_rate = 1e-3
 
 epochs = 40#50#100
 learning_rate = 1e-5
@@ -38,28 +39,26 @@ def build_efficient_net_model(num_classes):
     inputs = layers.Input(shape=(IMG_PIXELS,IMG_PIXELS, 3))
     x = get_augmentation_layer()(inputs)
     model = EfficientNetB0(include_top=False, input_tensor=inputs, weights='imagenet')
-
     # Freeze the pretrained weights
     model.trainable = False
 
-    # Rebuild top
     x = layers.GlobalAveragePooling2D(name='avg_pool')(model.output)
     x = layers.BatchNormalization()(x)
-
-    # top_dropout_rate = 0.2
-    #x = layers.Dropout(top_dropout_rate, name='top_dropout')(x)
-    # taper of the layer nodes
-    
-    x = layers.Dense(800, name='dense_800', activation='relu', kernel_regularizer=regularizers.l2(regularization_rate))(x)
-    x = layers.Dense(600, name='dense_600', activation='relu', kernel_regularizer=regularizers.l2(regularization_rate))(x)
-    x = layers.Dense(100, name='dense_100', activation='relu', kernel_regularizer=regularizers.l2(regularization_rate))(x)
+    x = layers.Dense(800, name='dense_800', activation='relu', 
+        kernel_regularizer=regularizers.l2(regularization_rate))(x)
+    x = layers.Dense(600,  name='dense_600', activation='relu', 
+        kernel_regularizer=regularizers.l2(regularization_rate))(x)
+    x = layers.Dense(100, name='dense_100', activation='relu', 
+        kernel_regularizer=regularizers.l2(regularization_rate))(x)
     outputs = layers.Dense(num_classes, activation='softmax', name='pred')(x)
 
     # Compile
     model = tf.keras.Model(inputs, outputs, name='EfficientNet')
     optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
     model.compile(
-        optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy']
+        optimizer=optimizer, 
+        loss='categorical_crossentropy', 
+        metrics=['accuracy']
     )
     return model
 
@@ -71,7 +70,8 @@ def main():
     # new style of saving data: 
     # experiments/{model_type}/{timestamp}/models
     # experiments/{model_type}/{timestamp}/plots
-    model = build_efficient_net_model(num_classes=6)
+    num_classes = len(train_ds.class_names)
+    model = build_efficient_net_model(num_classes=num_classes)
     time_stamp = int(time.time())
     experiment_dir = make_experiment_dir(model_type, str(time_stamp)) # have access to 'experiment_dir/models', 'experiment_dir/plots'
     experiment_dir_models = experiment_dir / 'models'
