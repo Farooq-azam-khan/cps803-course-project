@@ -125,7 +125,7 @@ def main():
         # build the tuner
         tuner = kt.Hyperband(kt_model_biulder_fn,
                          objective='val_accuracy',
-                         max_epochs=TUNER_EPOCHS,
+                         max_epochs=10,
                          factor=3,
                          directory=f'{model_name}_keras_tuner_garbage_class',
                          project_name=f'{model_name}_keras_tuner_garbage_class')
