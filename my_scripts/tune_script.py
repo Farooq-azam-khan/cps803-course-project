@@ -25,8 +25,12 @@ from tensorflow.keras.applications import (ResNet101, ResNet50)
 from helpers import (get_augmentation_layer, 
                     configure_gpu_memory_growth, 
                     load_train_val_data, 
+                    save_history,
+                    plot_accuracy,
+                    plot_loss,
                     make_experiment_dir)
 
+from evaluate_model import evaluate_model_on_test_data
 
 # Hyper Parameters
 model_type = {
@@ -65,10 +69,9 @@ batch_size = 16#[16, 32, 64, 128]
 learning_rate = [1e-3, 1e-4, 1e-5]
 regularization_rate = [0.00, 1e-3, 1e-4, 1e-5] # 0 means dont regularize
  
-epochs = 3#40
+TUNER_EPOCHS = 5
+BEST_TUNER_EPOCHS = 40
 
-def get_pretrained_model():
-    return False 
 
 def model_builder_wrapper(model_class, image_pixels, num_classes):
     def model_bulider(hp):
@@ -110,7 +113,7 @@ def main():
     configure_gpu_memory_growth()
     # for each model type, train the best hyper params
     for model_name in model_type:
-        print('Running model: ', model_name)
+        print('='*10, model_name, '='*10)
         model_config = model_type[model_name]
         # load the dataset 
         IMAGE_PIXELS = model_config['image_pixels']
@@ -122,59 +125,58 @@ def main():
         # build the tuner
         tuner = kt.Hyperband(kt_model_biulder_fn,
                          objective='val_accuracy',
-                         max_epochs=epochs,
+                         max_epochs=TUNER_EPOCHS,
                          factor=3,
                          directory=f'{model_name}_keras_tuner_garbage_class',
                          project_name=f'{model_name}_keras_tuner_garbage_class')
 
-        time_stamp = int(time.time())
-        experiment_dir = make_experiment_dir(model_name, str(time_stamp))
-        experiment_dir_models = experiment_dir / 'models'
-        if not os.path.exists: 
-            os.mkdir(experiment_dir_models)
+       
 
         callbacks = [ 
-            # keras.callbacks.ModelCheckpoint(
-            #     filepath=experiment_dir_models / 'enb1_dense_no_dropout_{epoch}_{val_accuracy:.2f}.h5',
-            #     monitor='val_accuracy',
-            #     save_best_only=True,
-            #     mode='max'# max becuase we want to save based on val_accuracy (if loss then min)
-            # ), 
             # needed cause doing a search over the hyper params
             tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5)
         ]
 
-        tuner.search(train_ds, epochs=epochs, validation_data=val_ds, callbacks=callbacks, verbose=1)
+        tuner.search(train_ds, epochs=TUNER_EPOCHS, validation_data=val_ds, callbacks=callbacks, verbose=1)
         # Get the optimal hyperparameters
         best_hps=tuner.get_best_hyperparameters(num_trials=1)[0]
         print(f'Best hyperparameters: {best_hps.get_config()}')
 
-        # TODO: plot + evaluate 
+        print('-'*10, 'Training the best model', '-'*10)
+        model = tuner.hypermodel.build(best_hps)
+        train_mest_model(model_name, model, train_ds, val_ds, image_size)
 
+        
 
+def train_mest_model(model_name, model, train_ds, val_ds, image_size):
+    time_stamp = int(time.time())
+    experiment_dir = make_experiment_dir(model_name, str(time_stamp))
+    experiment_dir_models = experiment_dir / 'models'
+    experiment_dir_plots = experiment_dir / 'plots'
 
-#     print('Loading Data...')
-#     train_ds, val_ds = load_train_val_data(image_size=image_size, batch_size=batch_size)
-#     time_stamp = int(time.time())
-#     experiment_dir = make_experiment_dir(model_type, str(time_stamp)) # have access to 'experiment_dir/models', 'experiment_dir/plots'
-#     experiment_dir_models = experiment_dir / 'models'
-#     experiment_dir_plots = experiment_dir / 'plots'
-#     callbacks = [
-#         keras.callbacks.ModelCheckpoint(
-#             filepath=experiment_dir_models / 'enb1_dense_no_dropout_{epoch}_{val_accuracy:.2f}.h5',
-#             monitor='val_accuracy',
-#             save_best_only=True,
-#             mode='max'# max becuase we want to save based on val_accuracy (if loss then min)
-#         )
-#     ]
+    callbacks = [ 
+                keras.callbacks.ModelCheckpoint(
+                    filepath=experiment_dir_models / 'enb1_dense_no_dropout_{epoch}_{val_accuracy:.2f}.h5',
+                    monitor='val_accuracy',
+                    # save_best_only=True,
+                    mode='max'# max becuase we want to save based on val_accuracy (if loss then min)
+                ), 
+                # needed cause doing a search over the hyper params
+                tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5)
+            ]
+
     
-#     hist = model.fit(train_ds, epochs=epochs, callbacks=callbacks, validation_data=val_ds, verbose=1)
-#     save_history(hist.history, experiment_dir_plots)
-#     plot_accuracy(hist, experiment_dir_plots, batch_size, image_size, model_type, epochs, save_as_tex=True)
-#     plot_loss(hist, experiment_dir_plots, batch_size, image_size, model_type, epochs, save_as_tex=True)
+    hist = model.fit(train_ds, epochs=BEST_TUNER_EPOCHS, validation_data=val_ds, callbacks=callbacks)        
 
-#     print('Evaluating Model...')
-#     evaluate_model_on_test_data(model, image_size, model_type, experiment_dir_plots)
+    
+    
+    save_history(hist.history, experiment_dir_plots)
+    plot_accuracy(hist, experiment_dir_plots, batch_size, image_size, model_name, BEST_TUNER_EPOCHS, save_as_tex=True)
+    plot_loss(hist, experiment_dir_plots, batch_size, image_size, model_name, BEST_TUNER_EPOCHS, save_as_tex=True)
+
+    print('Evaluating Model...')
+    evaluate_model_on_test_data(model, image_size, model_type, experiment_dir_plots)
+
 
 if __name__ == '__main__':
     main()
