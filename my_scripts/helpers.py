@@ -51,8 +51,9 @@ def plot_loss(history, experiment_path: pathlib.Path, batch_size, image_size, mo
     plt.title(f'{model_type} Loss - batch size {batch_size}')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
-    plt.plot(range(1, epochs+1), history.history['val_loss'])
-    plt.plot(range(1, epochs+1), history.history['loss'])
+    len_hist = len(history.history['val_loss'])
+    plt.plot(range(1, len_hist+1), history.history['val_loss'])
+    plt.plot(range(1, len_hist+1), history.history['loss'])
     plt.legend(['Validation Loss', 'Training Loss'])
     
     plt.savefig(experiment_path / f'loss_size_{image_size[0]}_{image_size[1]}.jpeg')
@@ -66,8 +67,9 @@ def plot_accuracy(history, experiment_path: pathlib.Path, batch_size, image_size
     plt.title(f'{model_type} Accuracy - batch size {batch_size}')
     plt.xlabel('Epoch')
     plt.ylabel('Accuracy')
-    plt.plot(range(1, epochs+1), history.history['val_accuracy'])
-    plt.plot(range(1, epochs+1), history.history['accuracy'])
+    len_hist = len(history.history['val_accuracy'])
+    plt.plot(range(1, len_hist+1), history.history['val_accuracy'])
+    plt.plot(range(1, len_hist+1), history.history['accuracy'])
     plt.legend(['Validation Accuracy', 'Training Accuracy'])
     plt.savefig(experiment_path / f'acc_size_{image_size[0]}_{image_size[1]}.jpeg')
     if save_as_tex:

@@ -38,30 +38,30 @@ model_type = {
         'image_pixels': 224,
         'model_class': EfficientNetB0,
     }, 
-    # 'EfficientNet-B1': {
-    #     'image_pixels': 240,
-    #     'model_class': EfficientNetB1,
-    # }, 
-    # 'EfficientNet-B2': {
-    #     'image_pixels': 260,
-    #     'model_class': EfficientNetB2,
-    # }, 
-    # 'EfficientNet-B3': {
-    #     'image_pixels': 300,
-    #     'model_class': EfficientNetB3,
-    # }, 
-    # 'EfficientNet-B4': {
-    #     'image_pixels': 380,
-    #     'model_class': EfficientNetB4,
-    # }, 
+    'EfficientNet-B1': {
+        'image_pixels': 240,
+        'model_class': EfficientNetB1,
+    }, 
+    'EfficientNet-B2': {
+        'image_pixels': 260,
+        'model_class': EfficientNetB2,
+    }, 
+    'EfficientNet-B3': {
+        'image_pixels': 300,
+        'model_class': EfficientNetB3,
+    }, 
+    'EfficientNet-B4': {
+        'image_pixels': 380,
+        'model_class': EfficientNetB4,
+    }, 
     'Resnet50': {
         'image_pixels': 224,
         'model_class': ResNet50,
     },  
-    # 'Resnet101': {
-    #     'image_pixels': 224,
-    #     'model_class': ResNet101,
-    # },
+    'Resnet101': {
+        'image_pixels': 224,
+        'model_class': ResNet101,
+    },
 }
 model_type_choice = [key for key in model_type.keys()]
 
@@ -175,7 +175,7 @@ def train_mest_model(model_name, model, train_ds, val_ds, image_size):
     plot_loss(hist, experiment_dir_plots, batch_size, image_size, model_name, BEST_TUNER_EPOCHS, save_as_tex=True)
 
     print('Evaluating Model...')
-    evaluate_model_on_test_data(model, image_size, model_type, experiment_dir_plots)
+    evaluate_model_on_test_data(model, image_size, model_name, experiment_dir_plots)
 
 
 if __name__ == '__main__':
