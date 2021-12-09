@@ -21,8 +21,8 @@ from evaluate_model import evaluate_model_on_test_data
 IMG_PIXELS = 256
 image_size = (IMG_PIXELS, IMG_PIXELS)
 batch_size = 32
-model_type = 'ResNet101'
-epochs = 60
+model_type = 'Resnet101'
+epochs = 40
 learning_rate = 1e-5
 
 
@@ -41,9 +41,11 @@ def build_resnet_net_model(num_classes):
     top_dropout_rate = 0.2
     #x = layers.Dropout(top_dropout_rate, name='top_dropout')(x)
     # taper of the layer nodes
-    x = layers.Dense(800, name='dense_800', activation='relu')(x)
-    x = layers.Dense(600, name='dense_600', activation='relu')(x)
-    x = layers.Dense(100, name='dense_100', activation='relu')(x)
+    x = layers.Dense(900, name='dense_900', activation='relu')(x)
+    x = layers.Dense(677, name='dense_677', activation='relu')(x)
+    x = layers.Dense(455, name='dense_455', activation='relu')(x)
+    x = layers.Dense(232, name='dense_232', activation='relu')(x)
+    x = layers.Dense(10, name='dense_10', activation='relu')(x)
     outputs = layers.Dense(num_classes, activation='softmax', name='pred')(x)
 
     # Compile
