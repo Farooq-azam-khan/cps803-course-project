@@ -1,146 +1,118 @@
+import os
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+import time
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras import layers, regularizers
-import pathlib
-import time 
-from keras.utils.vis_utils import plot_model
+from tensorflow.keras import layers
+from helpers import (
+                    load_train_val_data, 
+                    plot_accuracy, 
+                    plot_loss, 
+                    configure_gpu_memory_growth, 
+                    make_experiment_dir, 
+                    save_history, 
+                    get_augmentation_layer
+                    ) 
 
-import matplotlib.pyplot as plt
-
-# Hyper parameters
-image_size = (200,200) #(384, 512)
+IMG_PIXELS = 224
+image_size = (IMG_PIXELS, IMG_PIXELS)
 batch_size = 16
-epochs = 10
+model_type = 'CNN_L2'
+epochs = 200
 learning_rate = 1e-3
-model_type = 'cnn'
-base_dir = pathlib.Path('..')
-data_train = base_dir / 'data' / 'train'
-target_classes = ['cardboard', 'glass', 'metal', 'paper', 'plastic', 'trash']
-NUM_OF_DENSE_LAYS = 2
 
-
-
-def make_cnn_model(input_shape, num_classes):
-    inputs = keras.Input(shape=input_shape)
-    model = keras.Sequential()
-    model.add(inputs)
-    model.add(layers.Rescaling(1./255))
-
-    model.add(layers.Conv2D(32, 3, padding='same', activation='relu', input_shape=input_shape))
-    # 1 dense layer of 512 size
-    model.add(layers.Flatten())
-    # 20 Layers 
-    for _ in range(NUM_OF_DENSE_LAYS):
-        model.add(layers.Dense(units=512, activation="relu"))
-
-    model.add(layers.Dense(num_classes, activation="softmax"))
-    return model
-
-def configure_gpu_memory_growth():
-    gpus = tf.config.list_physical_devices('GPU')
-    if gpus:
-        print('Found GPU on Device, configuring memory growth')
-        try:
-            # Currently, memory growth needs to be the same across GPUs
-            for gpu in gpus:
-                tf.config.experimental.set_memory_growth(gpu, True)
-            logical_gpus = tf.config.list_logical_devices('GPU')
-            print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
-        except RuntimeError as e:
-            # Memory growth must be set before GPUs have been initialized
-            print(e)
+def get_train_val_ds():
     
-def load_train_val_data():
-
-    print('Loading data')
     train_ds = tf.keras.preprocessing.image_dataset_from_directory(
-        '../data/train',
-        validation_split=0.2,
-        subset="training",
-        label_mode="categorical",
-        seed=1337,
-        image_size=image_size,
-        batch_size=batch_size,
-    )
+    directory='../data/train',
+    validation_split=0.2,
+    subset="training",
+    label_mode="categorical",
+    seed=1337,
+    image_size=image_size,
+    batch_size=batch_size,
+    shuffle=True)
 
     val_ds = tf.keras.preprocessing.image_dataset_from_directory(
-        data_train,
+        directory='../data/train',
         validation_split=0.2,
         subset="validation",
         label_mode="categorical",
         seed=1337,
         image_size=image_size,
         batch_size=batch_size,
+        shuffle=True)
+    
+    return (train_ds, val_ds)
+
+def build_cnn_model(num_classes, num_dense_layers):
+    inputs = keras.Input(shape=(IMG_PIXELS, IMG_PIXELS, 3))
+    
+    model = keras.Sequential()
+    model.add(inputs)
+    model.add(layers.Rescaling(1./255))
+    model.add(layers.experimental.preprocessing.RandomFlip("horizontal_and_vertical"))
+    model.add(layers.experimental.preprocessing.RandomRotation(0.2))
+
+    model.add(layers.Conv2D(32, 3, padding="same", activation="relu", input_shape=(IMG_PIXELS, IMG_PIXELS, 3)))
+    model.add(layers.MaxPooling2D((2,2)))
+    model.add(layers.Conv2D(64, 3, padding="same", activation="relu"))
+    model.add(layers.MaxPooling2D((2,2)))
+    model.add(layers.Conv2D(128, 3, padding="same", activation="relu"))
+    model.add(layers.MaxPooling2D((2,2)))
+    model.add(layers.Conv2D(512, 3, padding="same", activation="relu"))
+    model.add(layers.MaxPooling2D((2,2)))
+    model.add(layers.Flatten())
+    
+    for _ in range(num_dense_layers):
+        model.add(layers.Dense(units=64, activation="relu", kernel_regularizer='l2'))
+        model.add(layers.Dropout(0.5))
+        
+        
+    model.add(layers.Dense(units=num_classes, activation="softmax", kernel_regularizer='l2'))
+    
+    model.build()
+    model.compile(
+        optimizer='adam',
+        loss="categorical_crossentropy",
+        metrics=["accuracy"]
     )
-    return train_ds, val_ds
-
-
-def plot_loss(history, time_stamp):
-    plt.figure()
-    plt.title(f'Simple NN Loss - batch size {batch_size}')
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.plot(range(1, epochs+1), history.history['val_loss'])
-    plt.plot(range(1, epochs+1), history.history['loss'])
-    plt.legend(['Validation Loss', 'Training Loss'])
     
-    plt.savefig(f'./plots/{model_type}/{time_stamp}_loss_size_{image_size[0]}_{image_size[1]}.jpeg')
+    return model
 
-def plot_accuracy(history, time_stamp):
-    plt.figure()
-    plt.title(f'Simple NN Accuracy - batch size {batch_size}')
-    plt.xlabel('Epoch')
-    plt.ylabel('Accuracy')
-    plt.plot(range(1, epochs+1), history.history['val_accuracy'])
-    plt.plot(range(1, epochs+1), history.history['accuracy'])
-    plt.legend(['Validation Accuracy', 'Training Accuracy'])
-    plt.savefig(f'./plots/{model_type}/{time_stamp}_acc_size_{image_size[0]}_{image_size[1]}.jpeg')
-    
 def main():
     configure_gpu_memory_growth()
-    train_ds, val_ds = load_train_val_data()
-
-    print('Making Model')
-    model = make_cnn_model(input_shape=image_size + (3,), num_classes=len(target_classes))
-    model.build()
-    print(model.summary())
+    print('Loading Data...')
+    train_ds, val_ds = get_train_val_ds()
     
-    print('Plotting Model')
-    curr_time = int(time.time())
-    unique_plot_name = f'./plots/{model_type}/{curr_time}_simple.png'
-    # docs: https://www.tensorflow.org/api_docs/python/tf/keras/utils/plot_model
-    #plot_model(model, to_file=unique_plot_name, show_shapes=True)
-
-    print('Training Model')
-    time_start = time.time()
+    model = build_cnn_model(num_classes=6, num_dense_layers=1)
+    
+    time_stamp = int(time.time())
+    experiment_dir = make_experiment_dir(model_type, str(time_stamp)) # have access to 'experiment_dir/models', 'experiment_dir/plots'
+    experiment_dir_models = experiment_dir / 'models'
+    experiment_dir_plots = experiment_dir / 'plots'
+    
     callbacks = [
         keras.callbacks.ModelCheckpoint(
-            filepath='./models/cnn/simple_{epoch}_{val_accuracy:.2f}.h5',
+            filepath=experiment_dir_models / 'L2_{epoch}_{val_accuracy:.2f}.h5',
             monitor='val_accuracy',
             save_best_only=True,
-            mode='max'# max becuase we want to save based on val_accuracy (if loss then min)
+            mode='max'
         )
     ]
-
-    model.compile(
-        optimizer=keras.optimizers.Adam(learning_rate),
-        loss='categorical_crossentropy',
-        metrics=['accuracy'],
-    )
-
-    history = model.fit(
-        train_ds, epochs=epochs, callbacks=callbacks, validation_data=val_ds,
-    )
-    time_end = time.time()
-
-    print('Time Elapsed: ', time_end - time_start)
-
-    print('Creating Plots')
-    plot_loss(history, curr_time)
-    plot_accuracy(history,curr_time)
     
+    
+    hist = model.fit(train_ds, epochs=epochs, validation_data=val_ds, callbacks=callbacks, verbose=1)
+    save_history(hist.history, experiment_dir_plots)
+    plot_accuracy(hist, experiment_dir_plots, batch_size, image_size, model_type, epochs, save_as_tex=True)
+    plot_loss(hist, experiment_dir_plots, batch_size, image_size, model_type, epochs, save_as_tex=True)
 
-
+    print('Evaluating Model...')
+    evaluate_model_on_test_data(model, image_size, model_type, experiment_dir_plots)
+   
 if __name__ == '__main__':
     main()
 
